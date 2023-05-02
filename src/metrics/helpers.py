@@ -18,7 +18,7 @@ def hash(password):
     return hasher.hash(password)
 
 
-def verify_password(hash, password)
+def verify_password(hash, password):
     hasher = argon2.PasswordHasher()
 
     if hasher.verify(hash, password): return True
