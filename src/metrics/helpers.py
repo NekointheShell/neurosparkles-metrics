@@ -1,9 +1,11 @@
-import os
+import os, secrets
 import pymongo, argon2, jwt
 from flask import request
 
 import metrics.errors as errors
-from metrics.app import secret_key
+
+
+secret_key = secrets.token_hex()
 
 
 def connect_db():
