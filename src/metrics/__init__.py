@@ -16,7 +16,7 @@ def login():
     password = request.json['password']
 
     if users_model.read_one(username) == None:
-        users_model.create(username)
+        users_model.create(username, password)
         key = helpers.create_jwt(username)
 
     else:
