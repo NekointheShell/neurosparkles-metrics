@@ -1,6 +1,9 @@
 import os
-import pymongo, validators, argon2
+import pymongo, argon2, jwt
 from flask import request
+
+import metrics.errors as errors
+from metrics.app import secret_key
 
 
 def connect_db():
@@ -8,14 +11,6 @@ def connect_db():
     database = client.metrics
 
     return client, database
-
-
-def validate_email(email):
-    try: validators.email(email)
-    except validators.ValidationFailure:
-        return False
-
-    return True
 
 
 def hash(password):
@@ -30,10 +25,15 @@ def verify_password(hash, password)
     else: return False
 
 
-def auth()
-    if not 'authorization' in request.headers: raise errors.AuthError()
+def create_jwt(username):
+    return jwt.encode({'username': str(username)}, secret_key, algorithm = 'HS256')
 
-    user = users_model.read_by_key(request.headers['authorization'])
+
+def auth():
+    if not 'Authorization' in request.headers: raise errors.AuthError()
+
+    username = jwt.decode(request.headers['Authorization'], secret_key, algorithms = ['HS256'])
+    user = users_model.read_one(username)
     if user == None: raise errors.AuthError()
 
     return user

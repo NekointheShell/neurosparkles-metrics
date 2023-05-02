@@ -1,51 +1,30 @@
 from flask import Flask, request
+import secrets, jwt
+
+import metrics.models.users as users_model
 
 
 app = Flask(__name__)
+app.secret_key = secrets.token_hex()
 
 
-@app.route('/metrics/api/login')
+@app.route('/metrics/login')
 def login():
-    if not 'email' in request.json: raise errors.DataError()
+    if not 'username' in request.json: raise errors.DataError()
     if not 'password' in request.json: raise errors.DataError()
-    if not helpers.validate_email(request.json['email']): raise errors.DataError()
 
-    email = request.json['email']
+    username = request.json['username']
     password = request.json['password']
 
-    if users_model.read_one(email) == None: key = users_model.create(email)
+    if users_model.read_one(username) == None:
+        users_model.create(username)
+        key = jwt.encode({'username': username}, app.secret_key, algorithm = 'HS256')
+
     else:
-        user = users_model.read_one(email)
+        user = users_model.read_one(username)
         if helpers.verify_password(user['password'], password):
-            key = users_model.new_key(email)
+            key = users_model.new_key(username)
 
         else: raise errors.AuthError()
 
-    return {'apikey': key}
-
-
-@app.route('/metrics/api/moods', methods = ['GET', 'POST'])
-def moods():
-    user = helpers.auth()
-
-    if request.method == 'GET':
-        ret = []
-
-        moods = moods_model.read(user['email'])
-        for mood in moods:
-            ret.append({'time': mood['time'], 'mood': mood['mood']})
-
-        return ret
-
-    elif request.method == 'POST':
-        if not 'mood' in request.json: raise errors.DataError()
-        moods_model.create(user['email'], request.json['mood'])
-        return {}
-
-
-@app.route('/metrics/api/sleep', methods = ['GET', 'POST'])
-@app.route('/metrics/api/exercise', methods = ['GET', 'POST'])
-@app.route('/metrics/api/food', methods = ['GET', 'POST'])
-@app.route('/metrics/api/blood_pressure', methods = ['GET', 'POST'])
-@app.route('/metrics/api/spo2', methods = ['GET', 'POST'])
-@app.route('/metrics/api/bpm', methods = ['GET', 'POST'])
+    return {'Authorization': key}
