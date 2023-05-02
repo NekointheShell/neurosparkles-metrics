@@ -7,7 +7,7 @@ import metrics.models.users as users_model
 app = Flask(__name__)
 
 
-@app.route('/metrics/login')
+@app.route('/metrics/login', methods = ['POST'])
 def login():
     if not 'username' in request.json: raise errors.DataError()
     if not 'password' in request.json: raise errors.DataError()
